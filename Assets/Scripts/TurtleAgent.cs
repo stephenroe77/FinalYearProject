@@ -26,7 +26,6 @@ public class TurtleAgent : Agent
     // Called when the agent is first initialized
     public override void Initialize()
     {
-        Debug.Log("Agent Initialized");
         _renderer = GetComponent<Renderer>();
         _currentEpisode = 0;
         _cumulativeReward = 0;
@@ -35,7 +34,6 @@ public class TurtleAgent : Agent
     // Called when the agent is reset
     public override void OnEpisodeBegin()
     {
-        Debug.Log("Episode Begin");
 
         _currentEpisode++;
         _cumulativeReward = 0f;
@@ -46,28 +44,47 @@ public class TurtleAgent : Agent
 
 
 
-    // Called when the agent requests a decision
     public override void CollectObservations(VectorSensor sensor)
     {
-        //The goal's position
-        float goalPositionX = _goal.localPosition.x / 5f;
-        float goalPositionZ = _goal.localPosition.z / 5f;
+        // Position relative to goal (helps agent understand direction)
+        Vector3 localGoalPos = transform.InverseTransformPoint(_goal.localPosition);
 
-        //The turtle's position
-        float turtlePositionX = transform.localPosition.x / 5f;
-        float turtlePositionZ = transform.localPosition.z / 5f;
+        // Agent's own position relative to origin (normalized)
+        Vector3 localAgentPos = transform.localPosition / 5f;
 
-        //The turtle's direction
-        float turtleRotationNormalized = (transform.localRotation.eulerAngles.y / 360f) * 2f - 1f;
+        // Distance to goal (helps with training efficiency)
+        float distanceToGoal = localGoalPos.magnitude;
 
-        sensor.AddObservation(goalPositionX);
-        sensor.AddObservation(goalPositionZ);
-        sensor.AddObservation(turtlePositionX);
-        sensor.AddObservation(turtlePositionZ);
-        sensor.AddObservation(turtleRotationNormalized);
+        // Wall detection using raycasts
+        RaycastHit hit;
+        float wallDistance = 1f; // Default max distance
+
+        if (Physics.Raycast(transform.position, transform.forward, out hit, 3f))
+        {
+            if (hit.collider.CompareTag("Wall"))
+            {
+                wallDistance = hit.distance / 3f;
+                // Debug.DrawRay(transform.position, transform.forward * hit.distance, Color.white); // Wall detected
+                // Debug.Log($"Wall detected! Distance: {hit.distance}");
+                if (hit.distance < 0.5f)
+                {
+                    AddReward(-0.1f); // Penalise for being too close to the wall
+                }
+            }
+        }
 
 
+        // Add observations to the sensor
+        sensor.AddObservation(localGoalPos.x / 5f);
+        sensor.AddObservation(localGoalPos.z / 5f);
+        sensor.AddObservation(distanceToGoal / 5f);
+        sensor.AddObservation(localAgentPos.x);
+        sensor.AddObservation(localAgentPos.z);
+        sensor.AddObservation(wallDistance);
     }
+
+
+
 
     // Called when the agent requests a decision
     public override void OnActionReceived(ActionBuffers actions)
@@ -141,7 +158,6 @@ public class TurtleAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        Debug.Log("Heuristic size: " + actionsOut.DiscreteActions.Length);
         var discreteActions = actionsOut.DiscreteActions;
 
         // Map keyboard inputs to the discrete action space
@@ -173,11 +189,9 @@ public class TurtleAgent : Agent
                 break;
             case 2: //Rotate Left
                 transform.Rotate(0f, -_rotationSpeed * Time.deltaTime, 0f);
-                Debug.Log("Rotate Left");
                 break;
             case 3: //Rotate Right
                 transform.Rotate(0f, _rotationSpeed * Time.deltaTime, 0f);
-                Debug.Log("Rotate Right");
                 break;
         }
 
@@ -187,13 +201,11 @@ public class TurtleAgent : Agent
     {
         if (other.gameObject.CompareTag("Goal"))
         {
-            Debug.Log("Goal Reached");
             GoalReached();
         }
 
         if (other.gameObject.CompareTag("Wall"))
         {
-            Debug.Log("Wall Hit");
             Penalise();
         }
     }
