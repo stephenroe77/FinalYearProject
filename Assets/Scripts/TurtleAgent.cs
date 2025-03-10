@@ -11,6 +11,8 @@ using Unity.MLAgents.Actuators;
 public class TurtleAgent : Agent
 {
     [SerializeField] private Transform _goal;
+    [SerializeField] public GameObject obstacles;
+
     [SerializeField] private float _moveSpeed = 1.5f;
     [SerializeField] private float _rotationSpeed = 180f;
     [SerializeField] private Material winMaterial;
@@ -19,14 +21,16 @@ public class TurtleAgent : Agent
 
 
     private Renderer _renderer;
+    public Vector3 spawnPosition = Vector3.zero; // World position to spawn the prefab
 
     private int _currentEpisode = 0;
     private float _cumulativeReward = 0;
+    private float curriculumValue;
+
 
     // Called when the agent is first initialized
     public override void Initialize()
     {
-        Debug.Log("Agent Initialized");
         _renderer = GetComponent<Renderer>();
         _currentEpisode = 0;
         _cumulativeReward = 0;
@@ -36,12 +40,20 @@ public class TurtleAgent : Agent
     public override void OnEpisodeBegin()
     {
         Debug.Log("Episode Begin");
-
+        curriculumValue = Academy.Instance.EnvironmentParameters.GetWithDefault("find_goal_param", 0.0f);
+        Debug.Log("Current Curriculum Value: " + curriculumValue);
         _currentEpisode++;
         _cumulativeReward = 0f;
         _renderer.material.color = Color.blue;
 
-        SpawnObjects();
+        if (curriculumValue >= 1.0f)
+        {
+            Debug.Log("AvoidObstacle Lesson Active");
+        }
+        else
+        {
+            SpawnObjects();
+        }
 
         // Get the current lesson value from the environment parameters
         // float lesson = Academy.Instance.EnvironmentParameters.GetWithDefault("lesson", 0f);
@@ -52,6 +64,27 @@ public class TurtleAgent : Agent
         //     SpawnObstacles();
         // }
     }
+
+    // public override void OnEpisodeBegin()
+    // {
+    //     // Retrieve curriculum parameter
+    //     curriculumValue = Academy.Instance.EnvironmentParameters.GetWithDefault("find_goal_param", 0.0f);
+    //     Debug.Log("Current Curriculum Value: " + curriculumValue);
+
+    //     // Adjust difficulty based on curriculum
+    //     if (curriculumValue >= 1.0f)
+    //     {
+    //         // Harder lesson: spawn obstacles differently or reduce rewards
+    //         Debug.Log("AvoidObstacle Lesson Active");
+    //         SpawnObjects(avoidObstacles: true);
+    //     }
+    //     else
+    //     {
+    //         // Easier lesson: standard goal finding
+    //         Debug.Log("FindGoal Lesson Active");
+    //         SpawnObjects(avoidObstacles: false);
+    //     }
+    // }
 
 
 
@@ -94,33 +127,34 @@ public class TurtleAgent : Agent
 
 
 
+    // private void SpawnObjects()
+    // {
+    //     transform.localRotation = Quaternion.identity;
+    //     transform.localPosition = new Vector3(0f, 0.15f, 0f);
+
+    //     Vector3 spawnSize = new Vector3(0.5f, 0.5f, 0.5f); // Size of the goal
+    //     // What does this line do with thr layer?   
+    //     LayerMask obstacleLayer = LayerMask.GetMask("Obstacle");
+
+    //     Vector3 spawnPosition;
+
+    //     do
+    //     {
+    //         float randomX = Random.Range(-2.5f, 2.5f);
+    //         float randomZ = Random.Range(-2.5f, 2.5f);
+    //         spawnPosition = new Vector3(randomX, 0.3f, randomZ);
+    //     }
+    //     while (Physics.OverlapBox(spawnPosition, spawnSize, Quaternion.identity, obstacleLayer).Length > 0);
+
+    //     _goal.localPosition = spawnPosition;
+    // }
+
     private void SpawnObjects()
     {
-        transform.localRotation = Quaternion.identity;
-        transform.localPosition = new Vector3(0f, 0.15f, 0f);
 
-
-        //Randomise the distance within the range [1, 2.5]
-        float randomX = Random.Range(-2.5f, 2.5f);
-        float randomZ = Random.Range(-2.5f, 2.5f);
-
-        //Apply the calculated position to the goal
-        _goal.localPosition = new Vector3(randomX, 0.3f, randomZ);
-
-        // float lesson = Academy.Instance.EnvironmentParameters.GetWithDefault("lesson", 0f);
-
-        // // Spawn obstacles based on the current lesson
-        // if (lesson >= 1.0f)
-        // {
-        //     // Randomize the position of the obstacle within the range [-2.5, 2.5]
-        //     float randomX = Random.Range(-2.5f, 2.5f);
-        //     float randomZ = Random.Range(-2.5f, 2.5f);
-
-        //     // Apply the calculated position to the obstacle
-        //     _obstacle.localPosition = new Vector3(randomX, 0.3f, randomZ);
-        // }
-
+        Instantiate(obstacles, spawnPosition, transform.rotation);
     }
+
 
 
 
@@ -164,7 +198,6 @@ public class TurtleAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        Debug.Log("Heuristic size: " + actionsOut.DiscreteActions.Length);
         var discreteActions = actionsOut.DiscreteActions;
 
         // Map keyboard inputs to the discrete action space
@@ -196,11 +229,9 @@ public class TurtleAgent : Agent
                 break;
             case 2: //Rotate Left
                 transform.Rotate(0f, -_rotationSpeed * Time.deltaTime, 0f);
-                Debug.Log("Rotate Left");
                 break;
             case 3: //Rotate Right
                 transform.Rotate(0f, _rotationSpeed * Time.deltaTime, 0f);
-                Debug.Log("Rotate Right");
                 break;
         }
 
@@ -210,13 +241,11 @@ public class TurtleAgent : Agent
     {
         if (other.gameObject.CompareTag("Goal"))
         {
-            Debug.Log("Goal Reached");
             GoalReached();
         }
 
         if (other.gameObject.CompareTag("Wall"))
         {
-            Debug.Log("Wall Hit");
             Penalise();
         }
     }
@@ -225,7 +254,7 @@ public class TurtleAgent : Agent
     {
         AddReward(2f); //Large reward for reaching goal
         _cumulativeReward = GetCumulativeReward();
-        Debug.Log("Cumulative Reward: " + _cumulativeReward);
+        // Debug.Log("Cumulative Reward: " + _cumulativeReward);
         floorRenderer.material = winMaterial;
         EndEpisode();
     }
@@ -234,7 +263,7 @@ public class TurtleAgent : Agent
     {
         AddReward(-1f); //Penalise for hitting the wall
         _cumulativeReward = GetCumulativeReward();
-        Debug.Log("Cumulative Reward: " + _cumulativeReward);
+        // Debug.Log("Cumulative Reward: " + _cumulativeReward);
         floorRenderer.material = loseMaterial;
         EndEpisode();
     }
