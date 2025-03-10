@@ -42,6 +42,15 @@ public class TurtleAgent : Agent
         _renderer.material.color = Color.blue;
 
         SpawnObjects();
+
+        // Get the current lesson value from the environment parameters
+        // float lesson = Academy.Instance.EnvironmentParameters.GetWithDefault("lesson", 0f);
+
+        // // Spawn obstacles based on the current lesson
+        // if (lesson >= 1.0f)
+        // {
+        //     SpawnObstacles();
+        // }
     }
 
 
@@ -88,7 +97,7 @@ public class TurtleAgent : Agent
     private void SpawnObjects()
     {
         transform.localRotation = Quaternion.identity;
-        transform.localPosition = new Vector3(0f, .15f, 0f);
+        transform.localPosition = new Vector3(0f, 0.15f, 0f);
 
 
         //Randomise the distance within the range [1, 2.5]
@@ -98,7 +107,21 @@ public class TurtleAgent : Agent
         //Apply the calculated position to the goal
         _goal.localPosition = new Vector3(randomX, 0.3f, randomZ);
 
+        // float lesson = Academy.Instance.EnvironmentParameters.GetWithDefault("lesson", 0f);
+
+        // // Spawn obstacles based on the current lesson
+        // if (lesson >= 1.0f)
+        // {
+        //     // Randomize the position of the obstacle within the range [-2.5, 2.5]
+        //     float randomX = Random.Range(-2.5f, 2.5f);
+        //     float randomZ = Random.Range(-2.5f, 2.5f);
+
+        //     // Apply the calculated position to the obstacle
+        //     _obstacle.localPosition = new Vector3(randomX, 0.3f, randomZ);
+        // }
+
     }
+
 
 
     // private void SpawnObjects()
