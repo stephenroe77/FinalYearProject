@@ -85,57 +85,57 @@ public class TurtleAgent : Agent
 
 
 
-    // private void SpawnObjects()
-    // {
-    //     transform.localRotation = Quaternion.identity;
-    //     transform.localPosition = new Vector3(0f, .15f, 0f);
-
-
-    //     //Randomise the distance within the range [1, 2.5]
-    //     float randomX = Random.Range(-2.5f, 2.5f);
-    //     float randomZ = Random.Range(-2.5f, 2.5f);
-
-    //     //Apply the calculated position to the goal
-    //     _goal.localPosition = new Vector3(randomX, 0.3f, randomZ);
-
-    // }
-
-
     private void SpawnObjects()
     {
         transform.localRotation = Quaternion.identity;
-        transform.localPosition = new Vector3(0f, 0.15f, 0f);
+        transform.localPosition = new Vector3(0f, .15f, 0f);
 
-        float spawnEdge = Random.Range(0, 4); // Pick one of the four edges
-        print("Spawn Edge: " + spawnEdge);
-        float spawnX = 0f;
-        float spawnZ = 0f;
 
-        float edgeOffset = 4f; // Keeps ball near walls but inside the grid (-4 to 4 range)
-        float randomOffset = Random.Range(-4f, 4f); // Random within boundary
+        //Randomise the distance within the range [1, 2.5]
+        float randomX = Random.Range(-2.5f, 2.5f);
+        float randomZ = Random.Range(-2.5f, 2.5f);
 
-        switch ((int)spawnEdge)
-        {
-            case 0: // Left Edge
-                spawnX = -edgeOffset;
-                spawnZ = randomOffset;
-                break;
-            case 1: // Right Edge
-                spawnX = edgeOffset;
-                spawnZ = randomOffset;
-                break;
-            case 2: // Bottom Edge
-                spawnX = randomOffset;
-                spawnZ = -edgeOffset;
-                break;
-            case 3: // Top Edge
-                spawnX = randomOffset;
-                spawnZ = edgeOffset;
-                break;
-        }
+        //Apply the calculated position to the goal
+        _goal.localPosition = new Vector3(randomX, 0.3f, randomZ);
 
-        _goal.localPosition = new Vector3(spawnX, 0.3f, spawnZ);
     }
+
+
+    // private void SpawnObjects()
+    // {
+    //     transform.localRotation = Quaternion.identity;
+    //     transform.localPosition = new Vector3(0f, 0.15f, 0f);
+
+    //     float spawnEdge = Random.Range(0, 4); // Pick one of the four edges
+    //     print("Spawn Edge: " + spawnEdge);
+    //     float spawnX = 0f;
+    //     float spawnZ = 0f;
+
+    //     float edgeOffset = 4f; // Keeps ball near walls but inside the grid (-4 to 4 range)
+    //     float randomOffset = Random.Range(-4f, 4f); // Random within boundary
+
+    //     switch ((int)spawnEdge)
+    //     {
+    //         case 0: // Left Edge
+    //             spawnX = -edgeOffset;
+    //             spawnZ = randomOffset;
+    //             break;
+    //         case 1: // Right Edge
+    //             spawnX = edgeOffset;
+    //             spawnZ = randomOffset;
+    //             break;
+    //         case 2: // Bottom Edge
+    //             spawnX = randomOffset;
+    //             spawnZ = -edgeOffset;
+    //             break;
+    //         case 3: // Top Edge
+    //             spawnX = randomOffset;
+    //             spawnZ = edgeOffset;
+    //             break;
+    //     }
+
+    //     _goal.localPosition = new Vector3(spawnX, 0.3f, spawnZ);
+    // }
 
 
 
