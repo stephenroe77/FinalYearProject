@@ -4,15 +4,18 @@
 //3. Graph results
 //4. Show difference in training wit 1,4,8,16 agents
 using UnityEngine;
+using TMPro;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
+using System.Collections.Generic;
 
 public class TurtleAgent : Agent
 {
     [SerializeField] private Transform _goal;
     [SerializeField] public GameObject obstacles;
-
+    [SerializeField] private GameObject obstacle_1;
+    [SerializeField] private GameObject obstacle_2;
     [SerializeField] private float _moveSpeed = 1.5f;
     [SerializeField] private float _rotationSpeed = 180f;
     [SerializeField] private Material winMaterial;
@@ -21,11 +24,14 @@ public class TurtleAgent : Agent
 
 
     private Renderer _renderer;
-    public Vector3 spawnPosition = Vector3.zero; // World position to spawn the prefab
 
+    // public TextMeshProUGUI _currentEpisodeText;
     private int _currentEpisode = 0;
     private float _cumulativeReward = 0;
-    private float curriculumValue;
+    private float curriculumValue = 0;
+
+    private List<GameObject> spawnedObstacles = new List<GameObject>();
+
 
 
     // Called when the agent is first initialized
@@ -40,51 +46,27 @@ public class TurtleAgent : Agent
     public override void OnEpisodeBegin()
     {
         Debug.Log("Episode Begin");
-        curriculumValue = Academy.Instance.EnvironmentParameters.GetWithDefault("find_goal_param", 0.0f);
-        Debug.Log("Current Curriculum Value: " + curriculumValue);
+
+        //check if the curriculum value is set due to changing configs
+        //check if the academt.instance.environmentparameters is not null
+
+        if (Academy.Instance.EnvironmentParameters != null)
+        {
+            curriculumValue = Academy.Instance.EnvironmentParameters.GetWithDefault("find_goal_param", 0.0f);
+            Debug.Log("Current Curriculum Value: " + curriculumValue);
+        }
+        else
+        {
+            Debug.Log("Academy Instance is null");
+        }
+
         _currentEpisode++;
         _cumulativeReward = 0f;
         _renderer.material.color = Color.blue;
 
-        if (curriculumValue >= 1.0f)
-        {
-            Debug.Log("AvoidObstacle Lesson Active");
-        }
-        else
-        {
-            SpawnObjects();
-        }
-
-        // Get the current lesson value from the environment parameters
-        // float lesson = Academy.Instance.EnvironmentParameters.GetWithDefault("lesson", 0f);
-
-        // // Spawn obstacles based on the current lesson
-        // if (lesson >= 1.0f)
-        // {
-        //     SpawnObstacles();
-        // }
+        SpawnObjects(curriculumValue);
+        // updateEpisodeUI();
     }
-
-    // public override void OnEpisodeBegin()
-    // {
-    //     // Retrieve curriculum parameter
-    //     curriculumValue = Academy.Instance.EnvironmentParameters.GetWithDefault("find_goal_param", 0.0f);
-    //     Debug.Log("Current Curriculum Value: " + curriculumValue);
-
-    //     // Adjust difficulty based on curriculum
-    //     if (curriculumValue >= 1.0f)
-    //     {
-    //         // Harder lesson: spawn obstacles differently or reduce rewards
-    //         Debug.Log("AvoidObstacle Lesson Active");
-    //         SpawnObjects(avoidObstacles: true);
-    //     }
-    //     else
-    //     {
-    //         // Easier lesson: standard goal finding
-    //         Debug.Log("FindGoal Lesson Active");
-    //         SpawnObjects(avoidObstacles: false);
-    //     }
-    // }
 
 
 
@@ -127,74 +109,64 @@ public class TurtleAgent : Agent
 
 
 
-    // private void SpawnObjects()
-    // {
-    //     transform.localRotation = Quaternion.identity;
-    //     transform.localPosition = new Vector3(0f, 0.15f, 0f);
-
-    //     Vector3 spawnSize = new Vector3(0.5f, 0.5f, 0.5f); // Size of the goal
-    //     // What does this line do with thr layer?   
-    //     LayerMask obstacleLayer = LayerMask.GetMask("Obstacle");
-
-    //     Vector3 spawnPosition;
-
-    //     do
-    //     {
-    //         float randomX = Random.Range(-2.5f, 2.5f);
-    //         float randomZ = Random.Range(-2.5f, 2.5f);
-    //         spawnPosition = new Vector3(randomX, 0.3f, randomZ);
-    //     }
-    //     while (Physics.OverlapBox(spawnPosition, spawnSize, Quaternion.identity, obstacleLayer).Length > 0);
-
-    //     _goal.localPosition = spawnPosition;
-    // }
-
-    private void SpawnObjects()
+    private void SpawnObjects(float curriculumValue)
     {
+        ClearObstacles();
 
-        Instantiate(obstacles, spawnPosition, transform.rotation);
+        transform.localRotation = Quaternion.identity;
+        transform.localPosition = new Vector3(0f, 0.15f, 0f);
+
+        Vector3 spawnSize = new Vector3(0.5f, 0.5f, 0.5f); // Size of the goal
+        LayerMask obstacleLayer = LayerMask.GetMask("Obstacle");
+
+        // Spawn obstacles for each lesson
+        if (curriculumValue != 0)
+        {
+            if (curriculumValue >= 1.0f && curriculumValue < 2.0f)
+            {
+                GameObject obstacleInstance = Instantiate(obstacle_1, transform.position, Quaternion.identity);
+                spawnedObstacles.Add(obstacleInstance);
+                Debug.Log("Obstacle 1");
+                Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
+            }
+            else if (curriculumValue >= 2.0f && curriculumValue < 3.0f)
+            {
+                GameObject obstacleInstance = Instantiate(obstacle_2, transform.position, Quaternion.identity);
+                spawnedObstacles.Add(obstacleInstance);
+                Debug.Log("Obstacle 2");
+                Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
+            }
+            else if (curriculumValue >= 3.0f)
+            {
+
+                GameObject obstacleInstance = Instantiate(obstacles, transform.position, Quaternion.identity);
+                spawnedObstacles.Add(obstacleInstance);
+                Debug.Log("Obstacle 3");
+                Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
+            }
+        }
+
+        Vector3 spawnPosition;
+
+        do
+        {
+            float randomX = Random.Range(-4f, 4);
+            float randomZ = Random.Range(-4f, 4f);
+            spawnPosition = new Vector3(randomX, 0.3f, randomZ);
+        }
+        while (Physics.OverlapBox(spawnPosition, spawnSize, Quaternion.identity, obstacleLayer).Length > 0);
+
+        _goal.localPosition = spawnPosition;
     }
 
-
-
-
-    // private void SpawnObjects()
-    // {
-    //     transform.localRotation = Quaternion.identity;
-    //     transform.localPosition = new Vector3(0f, 0.15f, 0f);
-
-    //     float spawnEdge = Random.Range(0, 4); // Pick one of the four edges
-    //     print("Spawn Edge: " + spawnEdge);
-    //     float spawnX = 0f;
-    //     float spawnZ = 0f;
-
-    //     float edgeOffset = 4f; // Keeps ball near walls but inside the grid (-4 to 4 range)
-    //     float randomOffset = Random.Range(-4f, 4f); // Random within boundary
-
-    //     switch ((int)spawnEdge)
-    //     {
-    //         case 0: // Left Edge
-    //             spawnX = -edgeOffset;
-    //             spawnZ = randomOffset;
-    //             break;
-    //         case 1: // Right Edge
-    //             spawnX = edgeOffset;
-    //             spawnZ = randomOffset;
-    //             break;
-    //         case 2: // Bottom Edge
-    //             spawnX = randomOffset;
-    //             spawnZ = -edgeOffset;
-    //             break;
-    //         case 3: // Top Edge
-    //             spawnX = randomOffset;
-    //             spawnZ = edgeOffset;
-    //             break;
-    //     }
-
-    //     _goal.localPosition = new Vector3(spawnX, 0.3f, spawnZ);
-    // }
-
-
+    private void ClearObstacles()
+    {
+        foreach (GameObject obstacle in spawnedObstacles)
+        {
+            Destroy(obstacle);
+        }
+        spawnedObstacles.Clear();
+    }
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
@@ -254,7 +226,7 @@ public class TurtleAgent : Agent
     {
         AddReward(2f); //Large reward for reaching goal
         _cumulativeReward = GetCumulativeReward();
-        // Debug.Log("Cumulative Reward: " + _cumulativeReward);
+        Debug.Log("Cumulative Reward: " + _cumulativeReward);
         floorRenderer.material = winMaterial;
         EndEpisode();
     }
@@ -263,9 +235,14 @@ public class TurtleAgent : Agent
     {
         AddReward(-1f); //Penalise for hitting the wall
         _cumulativeReward = GetCumulativeReward();
-        // Debug.Log("Cumulative Reward: " + _cumulativeReward);
+        Debug.Log("Cumulative Reward: " + _cumulativeReward);
         floorRenderer.material = loseMaterial;
         EndEpisode();
     }
+
+    // void updateEpisodeUI()
+    // {
+    //     currentEpisodeText.text = "Episode: " + _currentEpisode;
+    // }
 
 }
