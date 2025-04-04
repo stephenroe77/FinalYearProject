@@ -10,7 +10,7 @@ using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using System.Collections.Generic;
 
-public class TurtleAgent : Agent
+public class Agent_ : Agent
 {
     [SerializeField] private Transform _goal;
     [SerializeField] public GameObject obstacles;
@@ -77,18 +77,18 @@ public class TurtleAgent : Agent
         float goalPositionX = _goal.localPosition.x / 5f;
         float goalPositionZ = _goal.localPosition.z / 5f;
 
-        //The turtle's position
-        float turtlePositionX = transform.localPosition.x / 5f;
-        float turtlePositionZ = transform.localPosition.z / 5f;
+        //The agent's position
+        float agentPositionX = transform.localPosition.x / 5f;
+        float agentPositionZ = transform.localPosition.z / 5f;
 
-        //The turtle's direction
-        float turtleRotationNormalized = (transform.localRotation.eulerAngles.y / 360f) * 2f - 1f;
+        //The agent's direction
+        float agentRotationNormalized = (transform.localRotation.eulerAngles.y / 360f) * 2f - 1f;
 
         sensor.AddObservation(goalPositionX);
         sensor.AddObservation(goalPositionZ);
-        sensor.AddObservation(turtlePositionX);
-        sensor.AddObservation(turtlePositionZ);
-        sensor.AddObservation(turtleRotationNormalized);
+        sensor.AddObservation(agentPositionX);
+        sensor.AddObservation(agentPositionZ);
+        sensor.AddObservation(agentRotationNormalized);
 
 
     }
