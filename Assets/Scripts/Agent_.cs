@@ -1,3 +1,4 @@
+
 //Todo 
 //1. Add a wall to the environment
 //2. Train the agent to avoid the wall and reach the goal
@@ -120,32 +121,35 @@ public class Agent_ : Agent
         LayerMask obstacleLayer = LayerMask.GetMask("Obstacle");
 
         // Spawn obstacles for each lesson
-        if (curriculumValue != 0)
-        {
-            if (curriculumValue >= 1.0f && curriculumValue < 2.0f)
-            {
-                GameObject obstacleInstance = Instantiate(obstacle_1, transform.position, Quaternion.identity);
-                spawnedObstacles.Add(obstacleInstance);
-                Debug.Log("Obstacle 1");
-                Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
-            }
-            else if (curriculumValue >= 2.0f && curriculumValue < 3.0f)
-            {
-                GameObject obstacleInstance = Instantiate(obstacle_2, transform.position, Quaternion.identity);
-                spawnedObstacles.Add(obstacleInstance);
-                Debug.Log("Obstacle 2");
-                Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
-            }
-            else if (curriculumValue >= 3.0f)
-            {
+        // if (curriculumValue != 0)
+        // {
+        //     if (curriculumValue >= 1.0f && curriculumValue < 2.0f)
+        //     {
+        //         GameObject obstacleInstance = Instantiate(obstacle_1, transform.position, Quaternion.identity);
+        //         spawnedObstacles.Add(obstacleInstance);
+        //         Debug.Log("Obstacle 1");
+        //         Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
+        //     }
+        //     else if (curriculumValue >= 2.0f && curriculumValue < 3.0f)
+        //     {
+        //         GameObject obstacleInstance = Instantiate(obstacle_2, transform.position, Quaternion.identity);
+        //         spawnedObstacles.Add(obstacleInstance);
+        //         Debug.Log("Obstacle 2");
+        //         Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
+        //     }
+        //     else if (curriculumValue >= 3.0f)
+        //     {
 
-                GameObject obstacleInstance = Instantiate(obstacles, transform.position, Quaternion.identity);
-                spawnedObstacles.Add(obstacleInstance);
-                Debug.Log("Obstacle 3");
-                Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
-            }
-        }
-
+        //         GameObject obstacleInstance = Instantiate(obstacles, transform.position, Quaternion.identity);
+        //         spawnedObstacles.Add(obstacleInstance);
+        //         Debug.Log("Obstacle 3");
+        //         Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
+        //     }
+        // }
+        GameObject obstacleInstance = Instantiate(obstacles, transform.position, Quaternion.identity);
+        spawnedObstacles.Add(obstacleInstance);
+        Debug.Log("Obstacle 3");
+        Physics.SyncTransforms(); // Forces Unity to update physics before goal placement
         Vector3 spawnPosition;
 
         do
@@ -161,6 +165,7 @@ public class Agent_ : Agent
 
     private void ClearObstacles()
     {
+        if (spawnedObstacles.Count == 0) return;
         foreach (GameObject obstacle in spawnedObstacles)
         {
             Destroy(obstacle);
